@@ -1,19 +1,43 @@
 package be.codesolutions;
 
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import be.codesolutions.dxf.DxfDocument;
+import be.codesolutions.resolve.DxfRvlFile;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.quarkus.runtime.QuarkusApplication;
+import io.quarkus.runtime.annotations.QuarkusMain;
 
-@Command(name = "greeting", mixinStandardHelpOptions = true)
-public class GreetingCommand implements Runnable {
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
-    @Parameters(paramLabel = "<name>", defaultValue = "picocli",
-        description = "Your name.")
-    String name;
+@QuarkusMain
+public class GreetingCommand implements Runnable, QuarkusApplication {
+
+    @Override
+    public int run(String... args) throws Exception {
+        new GreetingCommand().run();
+        return 0;
+    }
 
     @Override
     public void run() {
-        System.out.printf("Hello %s, go go commando!\n", name);
+        long time = System.currentTimeMillis();
+        try (PrintWriter writer = new PrintWriter(new FileWriter(new File("/home/frederick/Downloads/dxf.json")))) {
+//        String dxf = "/home/var_rain/files/libdxfrw/dwg2dxf/test.dxf";
+            String dxf = "/home/frederick/Downloads/1262_1040_R01_Va.dxf";
+//        String dxf = "/home/var_rain/files/news.dxf";
+            DxfRvlFile reso = new DxfRvlFile();
+            DxfDocument document = reso.resolve(dxf);
+//        System.out.println(new Gson().toJson(document));
+            Gson json = new GsonBuilder().setPrettyPrinting().create();
+            writer.write(json.toJson(document));
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Options was ok. use time: " + (System.currentTimeMillis() - time) + "ms");
     }
-
 }
